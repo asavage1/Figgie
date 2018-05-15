@@ -37,27 +37,4 @@ class Player(object):
 
     def consider_proposal(self, suit, B, S, playerID):
         pass
-
-
     
-class BoringPlayer(Player):
-    def get_moves(self):
-        return [X,X,X,X]
-
-class SimpleTargetPlayer(Player):
-    def get_moves(self):
-        suit_occ = {}
-        for s in suits:
-            suit_occ[s] = 0
-        for r,s in self.cards:
-                suit_occ[s] += 1
-        target = max(suit_occ, key=suit_occ.get)
-
-        moves = []
-        for suit in suits:
-            if suit == target:
-                moves.append(10)
-            else:
-                moves.append(-5)
-            
-        return moves
