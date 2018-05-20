@@ -23,20 +23,21 @@ import random
 
 class Game(object):
     def __init__(self, players, ante_amt):
-        #assert(len(players) == 4)
+        assert(len(players) == 4)
         
-        self.cards, self.target_suit = init_cards()
+        self.cards, self.target_suit = self.init_cards()
         self.player1 = players[0]
         self.player2 = players[1]
         self.player3 = players[2]
         self.player4 = players[3]
+        self.players = players
 
         self.pot = 0
-        self.pot += take_antes(ante_amt)
+        self.pot += self.take_antes(self.cards, ante_amt, self.players)
         
 
 
-    def init_cards():
+    def init_cards(self):
         suits = ['Clubs', 'Hearts', 'Spades', 'Diamonds']
         random.shuffle(suits)
         ranks = [(i + 1) for i in range(13)]
@@ -57,7 +58,7 @@ class Game(object):
 
 
 
-    def take_antes(ante_amt):
+    def take_antes(self, deck, ante_amt, players):
         for i in range(len(players)):
             players[i].take(ante_amt)
             #give each 10 cards
@@ -67,21 +68,55 @@ class Game(object):
 
 
     
-    def play():
-        trade()
-        give_rewards()
-
-
+    def play(self):
+        no_trades = 0
+        max_no_trades = 9
         
-    def trade():
-        pass
+        while no_trades < max_no_trades:
+            for i in range(len(self.players)):
+                info = self.trade(self.players[i],
+                                  self.players[0:i]
+                                  + self.players[i + 1:len(self.players)])
+                
+                if len(info) != 2: no_trades += 1
+                
+        self.give_rewards()
+    
+        
+    def trade(self, offerer, other_players):
+        suit, B, S = offerer.give_proposal()
+        offer = (suit, B, S, offerer)
+        trade_info = offer
+        
+        for player in other_players:
+            taken = player.consider_proposal(suit, B, S, offerer)
+            if taken is None:
+                continue
+            elif taken is 'Buy': #player wants to buy offerer's card
+                card = offerer.take_card_rankless(suit)
+                player.give_card(card)
+                player.take(S)
+                offerer.give(S)
+                trade_info = offer, ('Buy', player)
+                break
+            elif taken is 'Sell': #player to sell their card to the offer
+                card = player.take_card_rankless(suit)
+                offerer.give_card(card)
+                offerer.take(B)
+                player.give(S)
+                trade_info = offer, ('Sell', player)
+                break
+            else:
+                raise(KeyError) #this situation should never happen by players
+            
+        return trade_info
 
 
     
-    def give_rewards():
+    def give_rewards(self):
         targets = []
-        for player in players:
-            num_target = len(list(filter((lambda x: x[1] == target),
+        for player in self.players:
+            num_target = len(list(filter((lambda x: x[1] == self.target_suit),
                                          player.cards)))
             player.give(10 * num_target)
             self.pot -= 10 * num_target
@@ -89,6 +124,6 @@ class Game(object):
 
         #Give the rest of the pot to the player(s) with max target suit
         occ = targets.count(max(targets))
-        for i in range(len(players)):
+        for i in range(len(self.players)):
             if targets[i] == max(targets):
-                players[i].give(self.pot / occ)
+                self.players[i].give(self.pot / occ)

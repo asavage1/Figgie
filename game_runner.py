@@ -6,10 +6,9 @@ def main(players):
     g.play()
 
     for i in range(len(players)):
-        print("player " + i + " ended with " players[i].coins)
+        print("player " + str(i) + " ended with " + str(players[i].coins))
 
 
 
 if __name__ == "__main__":
-    main(players)
-    #main([player.Player() for i in range(3)] + [player.SimpleTargetPlayer()])
+    main([player.Player() for i in range(4)])
